@@ -1,1 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>タロット占い</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn { animation: fadeIn 0.6s ease-out forwards; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-6">
+  <div class="max-w-6xl mx-auto text-center text-white">
+    <h1 class="text-5xl font-bold mb-2 flex items-center justify-center gap-3">
+      🔮 タロット占い 🔮
+    </h1>
+    <p class="text-purple-200 text-lg mb-8">カードがあなたの運命を導きます</p>
 
+    <div id="setup" class="bg-white/10 backdrop-blur-md rounded-2xl p-8 mb-6">
+      <h2 class="text-white text-xl font-semibold mb-4">スプレッドを選択</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button class="spread p-4 rounded-xl bg-white/20 text-purple-100 hover:bg-white/30" data-type="single">
+          <div class="font-bold text-lg mb-1">ワンカード</div>
+          <div class="text-sm opacity-90">今日の運勢</div>
+        </button>
+        <button class="spread p-4 rounded-xl bg-white/20 text-purple-100 hover:bg-white/30" data-type="three">
+          <div class="font-bold text-lg mb-1">スリーカード</div>
+          <div class="text-sm opacity-90">過去・現在・未来</div>
+        </button>
+        <button class="spread p-4 rounded-xl bg-white/20 text-purple-100 hover:bg-white/30" data-type="celtic">
+          <div class="font-bold text-lg mb-1">ファイブカード</div>
+          <div class="text-sm opacity-90">詳細な運勢</div>
+        </button>
+      </div>
+    </div>
+
+    <div id="button-area" class="mb-8">
+      <button id="draw" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-12 py-4 rounded-full text-xl font-bold hover:shadow-2xl hover:scale-105 transition-all">
+        カードを引く
+      </button>
+    </div>
+
+    <div id="cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6"></div>
+  </div>
+
+  <script>
+    const tarotCards = [
+      { name: '愚者', meaning: '新しい始まり、自由、冒険', reverse: '無謀、軽率、不注意' },
+      { name: '魔術師', meaning: '創造力、技術、意志の力', reverse: '操作、詐欺、未熟' },
+      { name: '女教皇', meaning: '直感、神秘、内なる知恵', reverse: '秘密、隠し事、表面的' },
+      { name: '女帝', meaning: '豊穣、愛、自然の恵み', reverse: '依存、過保護、怠惰' },
+      { name: '皇帝', meaning: '権威、安定、リーダーシップ', reverse: '独裁、頑固、支配' },
+      { name: '教皇', meaning: '伝統、精神性、導き', reverse: '形式主義、偏見、硬直' },
+      { name: '恋人', meaning: '愛、調和、選択', reverse: '不調和、誘惑、優柔不断' },
+      { name: '戦車', meaning: '勝利、意志、前進', reverse: '暴走、挫折、方向性の喪失' },
+      { name: '力', meaning: '勇気、忍耐、優しさ', reverse: '弱さ、自己不信、暴力' },
+      { name: '隠者', meaning: '内省、孤独、探求', reverse: '孤立、引きこもり、拒絶' },
+      { name: '運命の輪', meaning: '変化、運命、チャンス', reverse: '悪循環、抵抗、停滞' },
+      { name: '正義', meaning: '公平、真実、バランス', reverse: '不公平、偏見、不誠実' },
+      { name: '吊るされた男', meaning: '犠牲、新視点、待機', reverse: '無駄な犠牲、停滞、執着' },
+      { name: '死神', meaning: '終わりと始まり、変容', reverse: '停滞、恐れ、執着' },
+      { name: '節制', meaning: '調和、バランス、癒し', reverse: '不調和、過剰、不摂生' },
+      { name: '悪魔', meaning: '束縛、誘惑、物質主義', reverse: '解放、自覚、克服' },
+      { name: '塔', meaning: '突然の変化、崩壊、啓示', reverse: '回避、恐れ、内面的変化' },
+      { name: '星', meaning: '希望、癒し、インスピレーション', reverse: '絶望、喪失、不信' },
+      { name: '月', meaning: '不安、幻想、直感', reverse: '混乱、恐れ、欺瞞' },
+      { name: '太陽', meaning: '成功、喜び、活力', reverse: '失敗、悲観、エネルギー不足' },
+      { name: '審判', meaning: '再生、許し、目覚め', reverse: '後悔、自己批判、停滞' },
+      { name: '世界', meaning: '完成、達成、統合', reverse: '未完成、遅延、停滞' }
+    ];
+
+    let spread = 'single';
+
+    document.querySelectorAll('.spread').forEach(btn => {
+      btn.addEventListener('click', () => {
+        spread = btn.dataset.type;
+        document.querySelectorAll('.spread').forEach(b => b.classList.remove('bg-purple-500','text-white','shadow-lg','scale-105'));
+        btn.classList.add('bg-purple-500','text-white','shadow-lg','scale-105');
+      });
+    });
+
+    document.getElementById('draw').addEventListener('click', () => {
+      const numCards = spread === 'single' ? 1 : spread === 'three' ? 3 : 5;
+      const shuffled = [...tarotCards].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, numCards).map(c => ({ ...c, isReversed: Math.random() > 0.5 }));
+
+      const positions = spread === 'three' ? ['過去','現在','未来'] :
+                        spread === 'celtic' ? ['現状','障害','過去','未来','上位意識'] : [''];
+
+      const cardsDiv = document.getElementById('cards');
+      cardsDiv.innerHTML = '';
+      selected.forEach((card, i) => {
+        const div = document.createElement('div');
+        div.className = 'animate-fadeIn bg-white/10 backdrop-blur-md rounded-2xl p-6 hover:bg-white/20 transition-all';
+        div.innerHTML = `
+          ${positions[i] ? `<div class="text-purple-200 text-sm font-semibold mb-3 text-center">${positions[i]}</div>` : ''}
+          <div class="bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl p-6 mb-4 min-h-[200px] flex items-center justify-center shadow-xl ${card.isReversed ? 'transform rotate-180' : ''}">
+            <div class="${card.isReversed ? 'transform rotate-180' : ''}">
+              <div class="text-4xl mb-2 text-center">🔮</div>
+              <div class="text-xl font-bold text-purple-900 text-center">${card.name}</div>
+            </div>
+          </div>
+          <div class="text-white">
+            <div class="font-semibold mb-2 ${card.isReversed ? 'text-pink-300' : 'text-purple-300'}">${card.isReversed ? '逆位置' : '正位置'}</div>
+            <div class="text-sm leading-relaxed text-purple-100">${card.isReversed ? card.reverse : card.meaning}</div>
+          </div>
+        `;
+        cardsDiv.appendChild(div);
+      });
+
+      document.getElementById('button-area').innerHTML = `
+        <button id="reset" class="bg-white/20 text-white px-8 py-3 rounded-full font-semibold hover:bg-white/30 transition-all">
+          🔁 もう一度占う
+        </button>
+      `;
+      document.getElementById('reset').addEventListener('click', () => location.reload());
+    });
+  </script>
+</body>
+</html>
